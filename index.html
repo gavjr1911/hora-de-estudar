@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Hora de Estudar! 📚</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Fredoka',sans-serif;-webkit-font-smoothing:antialiased;background:linear-gradient(160deg,#FFF7ED 0%,#FDF2F8 30%,#EFF6FF 60%,#ECFDF5 100%);min-height:100vh}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+    input:focus{outline:none;box-shadow:0 0 0 3px rgba(139,92,246,0.3)}
+    button{font-family:'Fredoka',sans-serif;-webkit-tap-highlight-color:transparent}
+    button:active{transform:scale(0.97)!important}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useRef}=React;
+const CC=["#FF6B6B","#4ECDC4","#FFE66D","#A8E6CF","#FF8B94","#B8A9C9"];
+
+function Confetti({show}){
+  if(!show)return null;
+  const p=Array.from({length:30},(_,i)=>({id:i,left:Math.random()*100,delay:Math.random()*0.5,color:CC[Math.floor(Math.random()*CC.length)],size:Math.random()*8+6,dur:Math.random()*1+1.5}));
+  return(<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:9999}}>{p.map(x=><div key={x.id} style={{position:"absolute",left:x.left+"%",top:"-20px",width:x.size,height:x.size,backgroundColor:x.color,borderRadius:Math.random()>0.5?"50%":"2px",animation:`confettiFall ${x.dur}s ease-in ${x.delay}s forwards`}}/>)}</div>);
+}
+
+function Stars({score,total}){
+  const pct=total>0?score/total:0;
+  const s=pct>=0.9?3:pct>=0.6?2:pct>0?1:0;
+  return(<div style={{display:"flex",gap:4,justifyContent:"center",margin:"8px 0"}}>{[1,2,3].map(i=><span key={i} style={{fontSize:32,filter:i<=s?"none":"grayscale(1) opacity(0.3)"}}>⭐</span>)}</div>);
+}
+
+function Btn({onClick,disabled,gradient,children,style={}}){
+  return(<button onClick={onClick} disabled={disabled} style={{background:disabled?"#d1d5db":gradient,color:disabled?"#999":"#fff",border:"none",borderRadius:14,padding:"12px 32px",fontSize:16,fontWeight:700,cursor:disabled?"default":"pointer",transition:"all 0.2s",...style}}>{children}</button>);
+}
+
+function Opt({text,bg,border,color,onClick,disabled}){
+  return(<button onClick={onClick} style={{background:bg||"#f0f0ff",border:border||"2px solid #d0d0e0",color:color||"#333",borderRadius:14,padding:"14px 18px",fontSize:16,fontWeight:600,cursor:disabled?"default":"pointer",textAlign:"left",transition:"all 0.2s",width:"100%"}}>{text}</button>);
+}
+
+const PQ=[
+  {q:"O que essa placa quer dizer?",emoji:"🚫",sub:"E (Estacionamento proibido)",opts:["Pode estacionar aqui","NÃO pode estacionar aqui","Pode andar de bicicleta"],c:1},
+  {q:"Onde você colocaria uma placa de 'SILÊNCIO POR FAVOR'?",emoji:"🤫",sub:"SILÊNCIO POR FAVOR",opts:["No parquinho","Na biblioteca","Na piscina"],c:1},
+  {q:"Uma placa amarela com uma pessoa escorregando. O que significa?",emoji:"⚠️",sub:"PISO ESCORREGADIO",opts:["Pode correr aqui!","Cuidado! O chão está escorregadio","Lugar para brincar"],c:1},
+  {q:"Para que servem as placas?",emoji:"🪧",sub:"",opts:["Para enfeitar as ruas","Para orientar as pessoas e dar segurança","Para as crianças desenharem"],c:1},
+  {q:"Qual placa você veria perto de um zoológico?",emoji:"🦁",sub:"",opts:["ESTACIONAMENTO","ZOOLÓGICO →","SILÊNCIO POR FAVOR"],c:1},
+];
+
+function ActPlacas({onFinish}){
+  const[cur,setCur]=useState(0);const[sc,setSc]=useState(0);const[sel,setSel]=useState(null);const[show,setShow]=useState(false);const[conf,setConf]=useState(false);
+  const q=PQ[cur],last=cur===PQ.length-1;
+  const pick=(i)=>{if(show)return;setSel(i);setShow(true);if(i===q.c){setSc(s=>s+1);setConf(true);setTimeout(()=>setConf(false),2000);}};
+  const next=()=>{if(last){onFinish(sc);return;}setCur(c=>c+1);setSel(null);setShow(false);};
+  return(<div><Confetti show={conf}/>
+    <div style={{textAlign:"center",marginBottom:16,color:"#8B5CF6",fontWeight:700,fontSize:14}}>Pergunta {cur+1} de {PQ.length}</div>
+    <div style={{textAlign:"center",marginBottom:16}}><span style={{fontSize:56}}>{q.emoji}</span>{q.sub&&<div style={{fontWeight:800,fontSize:13,color:"#333",marginTop:4}}>{q.sub}</div>}</div>
+    <p style={{fontSize:18,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:16}}>{q.q}</p>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {q.opts.map((o,i)=>{let bg="#f0f0ff",bd="2px solid #d0d0e0",cl="#333";
+        if(show&&i===q.c){bg="#d4edda";bd="2px solid #28a745";cl="#155724";}
+        else if(show&&i===sel&&i!==q.c){bg="#f8d7da";bd="2px solid #dc3545";cl="#721c24";}
+        return<Opt key={i} text={<>{String.fromCharCode(65+i)}) {o}{show&&i===q.c&&" ✅"}{show&&i===sel&&i!==q.c&&" ❌"}</>} bg={bg} border={bd} color={cl} onClick={()=>pick(i)} disabled={show}/>;
+      })}
+    </div>
+    {show&&<div style={{marginTop:16,textAlign:"center"}}>
+      <p style={{fontSize:16,fontWeight:700,color:sel===q.c?"#28a745":"#dc3545"}}>{sel===q.c?"Muito bem! 🎉":"Ops! Tenta de novo na próxima! 💪"}</p>
+      <Btn onClick={next} gradient="linear-gradient(135deg,#8B5CF6,#6366F1)">{last?"Ver resultado! 🏆":"Próxima →"}</Btn>
+    </div>}
+  </div>);
+}
+
+const SQ=[
+  {emoji:"♻️",opts:["Ligar a TV","Reciclar o lixo","Ir ao banheiro"],c:1},
+  {emoji:"📶",opts:["Internet / Wi-Fi","Telefone tocando","Música alta"],c:0},
+  {emoji:"⏻",opts:["Parar de correr","Ligar ou desligar","Abrir a porta"],c:1},
+  {emoji:"🚻",opts:["Banheiro","Escola","Hospital"],c:0},
+  {emoji:"▶️",opts:["Parar o vídeo","Apertar o play / tocar","Desligar a luz"],c:1},
+];
+
+function ActSymbols({onFinish}){
+  const[cur,setCur]=useState(0);const[sc,setSc]=useState(0);const[sel,setSel]=useState(null);const[show,setShow]=useState(false);const[conf,setConf]=useState(false);
+  const s=SQ[cur],last=cur===SQ.length-1;
+  const pick=(i)=>{if(show)return;setSel(i);setShow(true);if(i===s.c){setSc(x=>x+1);setConf(true);setTimeout(()=>setConf(false),2000);}};
+  const next=()=>{if(last){onFinish(sc);return;}setCur(c=>c+1);setSel(null);setShow(false);};
+  return(<div><Confetti show={conf}/>
+    <div style={{textAlign:"center",marginBottom:8,color:"#E8590C",fontWeight:700,fontSize:14}}>Símbolo {cur+1} de {SQ.length}</div>
+    <div style={{textAlign:"center",marginBottom:12}}><span style={{fontSize:72}}>{s.emoji}</span></div>
+    <p style={{fontSize:18,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:16}}>O que esse símbolo significa?</p>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {s.opts.map((o,i)=>{let bg="#fff8f0",bd="2px solid #ffd0a0",cl="#333";
+        if(show&&i===s.c){bg="#d4edda";bd="2px solid #28a745";cl="#155724";}
+        else if(show&&i===sel&&i!==s.c){bg="#f8d7da";bd="2px solid #dc3545";cl="#721c24";}
+        return<Opt key={i} text={<>{o}{show&&i===s.c&&" ✅"}{show&&i===sel&&i!==s.c&&" ❌"}</>} bg={bg} border={bd} color={cl} onClick={()=>pick(i)} disabled={show}/>;
+      })}
+    </div>
+    {show&&<div style={{marginTop:16,textAlign:"center"}}>
+      <p style={{fontSize:16,fontWeight:700,color:sel===s.c?"#28a745":"#dc3545"}}>{sel===s.c?"Arrasou! 🌟":"Quase lá! Vamos continuar! 💪"}</p>
+      <Btn onClick={next} gradient="linear-gradient(135deg,#E8590C,#F59E0B)">{last?"Ver resultado! 🏆":"Próximo →"}</Btn>
+    </div>}
+  </div>);
+}
+
+const ALPHA="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const VOW=new Set(["A","E","I","O","U"]);
+
+function ActAlpha({onFinish}){
+  const[phase,setPhase]=useState("classify");const[ans,setAns]=useState({});const[showR,setShowR]=useState(false);const[sc,setSc]=useState(0);const[conf,setConf]=useState(false);
+  const[spIdx,setSpIdx]=useState(0);const[spSel,setSpSel]=useState(null);const[spShow,setSpShow]=useState(false);const[spSc,setSpSc]=useState(0);
+  const tap=(l)=>{if(showR)return;setAns(p=>{const c=p[l];if(!c)return{...p,[l]:"vogal"};if(c==="vogal")return{...p,[l]:"consoante"};const cp={...p};delete cp[l];return cp;});};
+  const check=()=>{let cor=0;ALPHA.forEach(l=>{if((VOW.has(l)&&ans[l]==="vogal")||(!VOW.has(l)&&ans[l]==="consoante"))cor++;});setSc(cor);setShowR(true);if(cor>=20){setConf(true);setTimeout(()=>setConf(false),2000);}};
+  const SPQ=[{q:"A letra K tem som parecido com qual letra?",opts:["A","C","E"],c:1,letter:"K"},{q:"No nome WILLIAM, a letra W tem som de qual vogal?",opts:["A","I","U"],c:2,letter:"W"},{q:"A letra Y no nome YASMIN se parece com qual letra?",opts:["I","O","U"],c:0,letter:"Y"}];
+  const spPick=(i)=>{if(spShow)return;setSpSel(i);setSpShow(true);if(i===SPQ[spIdx].c){setSpSc(s=>s+1);setConf(true);setTimeout(()=>setConf(false),2000);}};
+  const spNext=()=>{if(spIdx===SPQ.length-1){onFinish(sc+spSc);return;}setSpIdx(i=>i+1);setSpSel(null);setSpShow(false);};
+  if(phase==="special"){const sq=SPQ[spIdx];return(<div><Confetti show={conf}/>
+    <div style={{textAlign:"center",marginBottom:8,color:"#059669",fontWeight:700,fontSize:14}}>Letras especiais: {spIdx+1} de {SPQ.length}</div>
+    <div style={{textAlign:"center",margin:"16px 0"}}><span style={{fontSize:56,color:"#059669",fontWeight:800}}>{sq.letter}</span></div>
+    <p style={{fontSize:17,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:16}}>{sq.q}</p>
+    <div style={{display:"flex",gap:10,justifyContent:"center"}}>{sq.opts.map((o,i)=>{let bg="#ecfdf5",bd="2px solid #a7f3d0";if(spShow&&i===sq.c){bg="#d4edda";bd="2px solid #28a745";}else if(spShow&&i===spSel&&i!==sq.c){bg="#f8d7da";bd="2px solid #dc3545";}return<button key={i} onClick={()=>spPick(i)} style={{background:bg,border:bd,borderRadius:14,padding:"16px 24px",fontSize:24,fontWeight:800,cursor:spShow?"default":"pointer",minWidth:60,transition:"all 0.2s"}}>{o}</button>;})}</div>
+    {spShow&&<div style={{marginTop:16,textAlign:"center"}}><p style={{fontSize:16,fontWeight:700,color:spSel===sq.c?"#28a745":"#dc3545"}}>{spSel===sq.c?"Isso aí! 🎉":"Não foi dessa vez! 😊"}</p><Btn onClick={spNext} gradient="linear-gradient(135deg,#059669,#10B981)">{spIdx===SPQ.length-1?"Ver resultado! 🏆":"Próxima →"}</Btn></div>}
+  </div>);}
+  return(<div><Confetti show={conf}/>
+    <p style={{fontSize:16,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:8}}>Toque nas letras para classificar:</p>
+    <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:12,flexWrap:"wrap"}}>
+      <span style={{background:"#3B82F6",color:"#fff",borderRadius:8,padding:"4px 10px",fontSize:12,fontWeight:700}}>🔵 Vogal</span>
+      <span style={{background:"#EF4444",color:"#fff",borderRadius:8,padding:"4px 10px",fontSize:12,fontWeight:700}}>🔴 Consoante</span>
+      <span style={{background:"#e5e7eb",color:"#666",borderRadius:8,padding:"4px 10px",fontSize:12,fontWeight:700}}>⬜ Sem escolha</span>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:6,marginBottom:16}}>
+      {ALPHA.map(l=>{const a=ans[l];let bg="#f3f4f6",cl="#333",bd="2px solid #d1d5db";
+        if(a==="vogal"){bg="#DBEAFE";bd="2px solid #3B82F6";cl="#1E40AF";}else if(a==="consoante"){bg="#FEE2E2";bd="2px solid #EF4444";cl="#991B1B";}
+        if(showR){const isV=VOW.has(l);const ok=(isV&&a==="vogal")||(!isV&&a==="consoante");if(ok){bg="#D1FAE5";bd="2px solid #10B981";}else{bg="#FEF3C7";bd="2px solid #F59E0B";}}
+        return<button key={l} onClick={()=>tap(l)} style={{background:bg,border:bd,color:cl,borderRadius:10,padding:"8px 2px",fontSize:18,fontWeight:800,cursor:showR?"default":"pointer",transition:"all 0.15s"}}>{l}</button>;
+      })}
+    </div>
+    {!showR?<div style={{textAlign:"center"}}><Btn onClick={check} gradient="linear-gradient(135deg,#059669,#10B981)">Verificar! ✨</Btn></div>
+    :<div style={{textAlign:"center"}}><p style={{fontSize:16,fontWeight:700,color:"#059669"}}>Você acertou {sc} de 26! {sc>=20?"Muito bom! 🌟":"Continue praticando! 💪"}</p>
+      <Btn onClick={()=>{setPhase("special");setShowR(false);setAns({});}} gradient="linear-gradient(135deg,#059669,#10B981)">Agora as letras K, W, Y! →</Btn></div>}
+  </div>);
+}
+
+const WF=[
+  {img:"🐱",word:["_","A","_","O"],answer:["G","A","T","O"],blanks:[0,2]},
+  {img:"🎲",word:["_","A","_","O"],answer:["D","A","D","O"],blanks:[0,2]},
+  {img:"🖊️",word:["_","A","_","E","_","A"],answer:["C","A","N","E","T","A"],blanks:[0,2,4]},
+  {img:"🪟",word:["_","A","_","E","_","A"],answer:["J","A","N","E","L","A"],blanks:[0,2,4]},
+  {img:"🏠",word:["_","A","_","A"],answer:["C","A","S","A"],blanks:[0,2]},
+  {img:"🗺️",word:["_","A","_","A"],answer:["M","A","P","A"],blanks:[0,2]},
+  {img:"👞",word:["_","A","_","A","_","O"],answer:["S","A","P","A","T","O"],blanks:[0,2,4]},
+  {img:"🐴",word:["_","A","_","A","_","O"],answer:["C","A","V","A","L","O"],blanks:[0,2,4]},
+];
+
+function ActFill({onFinish}){
+  const[cur,setCur]=useState(0);const[inp,setInp]=useState({});const[showR,setShowR]=useState(false);const[sc,setSc]=useState(0);const[conf,setConf]=useState(false);const refs=useRef({});
+  const w=WF[cur],last=cur===WF.length-1;
+  const handleI=(bi,v)=>{const u=v.toUpperCase().replace(/[^A-ZÀ-Ú]/g,"");if(u.length<=1){setInp(p=>({...p,[bi]:u}));if(u.length===1){const pos=w.blanks.indexOf(bi);if(pos<w.blanks.length-1){const nb=w.blanks[pos+1];setTimeout(()=>refs.current[nb]?.focus(),50);}}}};
+  const check=()=>{let ok=true;w.blanks.forEach(bi=>{if((inp[bi]||"")!==w.answer[bi])ok=false;});if(ok){setSc(s=>s+1);setConf(true);setTimeout(()=>setConf(false),2000);}setShowR(true);};
+  const next=()=>{if(last){onFinish(sc);return;}setCur(c=>c+1);setInp({});setShowR(false);};
+  const allF=w.blanks.every(bi=>(inp[bi]||"").length===1);
+  return(<div><Confetti show={conf}/>
+    <div style={{textAlign:"center",marginBottom:8,color:"#7C3AED",fontWeight:700,fontSize:14}}>Palavra {cur+1} de {WF.length}</div>
+    <div style={{textAlign:"center",marginBottom:12}}><span style={{fontSize:64}}>{w.img}</span></div>
+    <p style={{fontSize:16,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:16}}>Complete com as consoantes que faltam:</p>
+    <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap",marginBottom:16}}>
+      {w.word.map((l,i)=>{const isB=w.blanks.includes(i);
+        if(!isB)return<div key={i} style={{width:44,height:50,display:"flex",alignItems:"center",justifyContent:"center",background:"#E9D5FF",borderRadius:10,fontSize:24,fontWeight:800,color:"#5B21B6",border:"2px solid #C4B5FD"}}>{l}</div>;
+        let bg="#fff",bd="2px solid #A78BFA";if(showR){const ok=(inp[i]||"")===w.answer[i];bg=ok?"#D1FAE5":"#FEE2E2";bd=ok?"2px solid #10B981":"2px solid #EF4444";}
+        return<input key={i} ref={el=>{refs.current[i]=el}} value={inp[i]||""} onChange={e=>handleI(i,e.target.value)} disabled={showR} maxLength={1} style={{width:44,height:50,textAlign:"center",background:bg,border:bd,borderRadius:10,fontSize:24,fontWeight:800,color:"#5B21B6",caretColor:"#7C3AED",fontFamily:"'Fredoka',sans-serif"}}/>;
+      })}
+    </div>
+    {showR&&<p style={{textAlign:"center",fontSize:14,color:"#666",marginBottom:8}}>Resposta: <strong style={{color:"#5B21B6"}}>{w.answer.join("")}</strong></p>}
+    <div style={{textAlign:"center"}}>{!showR?<Btn onClick={check} disabled={!allF} gradient="linear-gradient(135deg,#7C3AED,#A78BFA)">Verificar! ✨</Btn>:<Btn onClick={next} gradient="linear-gradient(135deg,#7C3AED,#A78BFA)">{last?"Ver resultado! 🏆":"Próxima →"}</Btn>}</div>
+  </div>);
+}
+
+const SW=[
+  {base:"PATO",tasks:[{hint:"Troque o P por G",ans:"GATO"},{hint:"Troque o T por N",ans:"PANO"},{hint:"Troque o O por A",ans:"PATA"}]},
+  {base:"BOLA",tasks:[{hint:"Troque o B por C",ans:"COLA"},{hint:"Troque o L por T",ans:"BOTA"},{hint:"Troque o OLA por ALA",ans:"BALA"}]},
+  {base:"FACA",tasks:[{hint:"Troque o F por V",ans:"VACA"},{hint:"Troque o C por D",ans:"FADA"},{hint:"Troque o FA por FO",ans:"FOCA"}]},
+];
+
+function ActSwap({onFinish}){
+  const[wi,setWi]=useState(0);const[ti,setTi]=useState(0);const[inp,setInp]=useState("");const[showR,setShowR]=useState(false);const[sc,setSc]=useState(0);const[conf,setConf]=useState(false);
+  const w=SW[wi],t=w.tasks[ti],lastT=ti===w.tasks.length-1,lastW=wi===SW.length-1;const ok=inp.toUpperCase().trim()===t.ans;
+  const check=()=>{if(ok){setSc(s=>s+1);setConf(true);setTimeout(()=>setConf(false),2000);}setShowR(true);};
+  const next=()=>{if(lastT&&lastW){onFinish(sc);return;}if(lastT){setWi(i=>i+1);setTi(0);}else{setTi(i=>i+1);}setInp("");setShowR(false);};
+  return(<div><Confetti show={conf}/>
+    <div style={{textAlign:"center",marginBottom:12}}><span style={{display:"inline-block",background:"#FEF3C7",border:"2px solid #F59E0B",borderRadius:14,padding:"8px 24px",fontSize:28,fontWeight:800,color:"#92400E",letterSpacing:6}}>{w.base}</span></div>
+    <p style={{fontSize:17,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:8}}>{t.hint}</p>
+    <p style={{fontSize:14,textAlign:"center",color:"#666",marginBottom:12}}>Qual palavra nova se forma?</p>
+    <div style={{display:"flex",justifyContent:"center",marginBottom:16}}>
+      <input value={inp} onChange={e=>setInp(e.target.value.toUpperCase())} disabled={showR} placeholder="DIGITE AQUI" maxLength={6} style={{width:200,textAlign:"center",padding:"12px 16px",fontSize:24,fontWeight:800,borderRadius:14,border:showR?(ok?"3px solid #10B981":"3px solid #EF4444"):"3px solid #F59E0B",background:showR?(ok?"#D1FAE5":"#FEE2E2"):"#FFFBEB",color:"#333",letterSpacing:4,fontFamily:"'Fredoka',sans-serif"}}/>
+    </div>
+    {showR&&!ok&&<p style={{textAlign:"center",fontSize:14,color:"#666"}}>A resposta era: <strong style={{color:"#92400E"}}>{t.ans}</strong></p>}
+    <div style={{textAlign:"center"}}>{!showR?<Btn onClick={check} disabled={!inp.trim()} gradient="linear-gradient(135deg,#F59E0B,#EAB308)">Verificar! ✨</Btn>
+    :<div><p style={{fontSize:16,fontWeight:700,color:ok?"#28a745":"#dc3545",marginBottom:8}}>{ok?"Perfeito! 🎉":"Da próxima você acerta! 😊"}</p><Btn onClick={next} gradient="linear-gradient(135deg,#F59E0B,#EAB308)">{lastT&&lastW?"Ver resultado! 🏆":"Próxima →"}</Btn></div>}</div>
+  </div>);
+}
+
+function ActCracha({onFinish}){
+  const[phase,setPhase]=useState("create");const[name,setName]=useState("");const[school,setSchool]=useState("");const[turma,setTurma]=useState("");const[color,setColor]=useState("#3B82F6");const[done,setDone]=useState(false);const[conf,setConf]=useState(false);
+  const[qi,setQi]=useState(0);const[qSel,setQSel]=useState(null);const[qShow,setQShow]=useState(false);const[sc,setSc]=useState(0);
+  const QQ=[{q:"Para que serve um crachá?",opts:["Para brincar","Para identificar a pessoa","Para desenhar"],c:1},{q:"O que costuma ter em um crachá?",opts:["Nome e foto","Receita de bolo","Mapa do tesouro"],c:0},{q:"Em que lugar uma doutora usa crachá?",opts:["Na praia","No hospital","No cinema"],c:1},{q:"Por que o crachá tem foto?",opts:["Para ficar bonito","Para saber quem é a pessoa","Para enfeitar"],c:1}];
+  const colors=["#3B82F6","#EF4444","#10B981","#F59E0B","#8B5CF6","#EC4899"];
+  const createDone=()=>{if(name.trim()){setDone(true);setConf(true);setTimeout(()=>setConf(false),2000);}};
+  const qPick=(i)=>{if(qShow)return;setQSel(i);setQShow(true);if(i===QQ[qi].c){setSc(s=>s+1);setConf(true);setTimeout(()=>setConf(false),2000);}};
+  const qNext=()=>{if(qi===QQ.length-1){onFinish(sc);return;}setQi(i=>i+1);setQSel(null);setQShow(false);};
+  if(phase==="quiz"){const qq=QQ[qi];return(<div><Confetti show={conf}/>
+    <div style={{textAlign:"center",marginBottom:8,color:"#EC4899",fontWeight:700,fontSize:14}}>Pergunta {qi+1} de {QQ.length}</div>
+    <p style={{fontSize:17,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:16}}>{qq.q}</p>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>{qq.opts.map((o,i)=>{let bg="#FDF2F8",bd="2px solid #F9A8D4";if(qShow&&i===qq.c){bg="#D1FAE5";bd="2px solid #10B981";}else if(qShow&&i===qSel&&i!==qq.c){bg="#FEE2E2";bd="2px solid #EF4444";}return<Opt key={i} text={<>{o}{qShow&&i===qq.c&&" ✅"}{qShow&&i===qSel&&i!==qq.c&&" ❌"}</>} bg={bg} border={bd} onClick={()=>qPick(i)} disabled={qShow}/>;})}</div>
+    {qShow&&<div style={{marginTop:16,textAlign:"center"}}><Btn onClick={qNext} gradient="linear-gradient(135deg,#EC4899,#F472B6)">{qi===QQ.length-1?"Ver resultado! 🏆":"Próxima →"}</Btn></div>}
+  </div>);}
+  return(<div><Confetti show={conf}/>
+    <p style={{fontSize:17,fontWeight:700,textAlign:"center",color:"#1a1a2e",marginBottom:16}}>Vamos criar o seu crachá!</p>
+    {!done?<div style={{display:"flex",flexDirection:"column",gap:12}}>
+      <div><label style={{fontSize:14,fontWeight:700,color:"#555"}}>Seu nome:</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="Digite seu nome" style={{width:"100%",padding:"10px 14px",fontSize:16,borderRadius:10,border:"2px solid #F9A8D4",fontFamily:"'Fredoka',sans-serif"}}/></div>
+      <div><label style={{fontSize:14,fontWeight:700,color:"#555"}}>Sua escola:</label><input value={school} onChange={e=>setSchool(e.target.value)} placeholder="Nome da escola" style={{width:"100%",padding:"10px 14px",fontSize:16,borderRadius:10,border:"2px solid #F9A8D4",fontFamily:"'Fredoka',sans-serif"}}/></div>
+      <div><label style={{fontSize:14,fontWeight:700,color:"#555"}}>Sua turma:</label><input value={turma} onChange={e=>setTurma(e.target.value)} placeholder="1º Ano A" style={{width:"100%",padding:"10px 14px",fontSize:16,borderRadius:10,border:"2px solid #F9A8D4",fontFamily:"'Fredoka',sans-serif"}}/></div>
+      <div><label style={{fontSize:14,fontWeight:700,color:"#555"}}>Cor do crachá:</label><div style={{display:"flex",gap:8,marginTop:6}}>{colors.map(c=><button key={c} onClick={()=>setColor(c)} style={{width:36,height:36,borderRadius:"50%",background:c,border:color===c?"3px solid #333":"3px solid transparent",cursor:"pointer"}}/>)}</div></div>
+      <Btn onClick={createDone} disabled={!name.trim()} gradient="linear-gradient(135deg,#EC4899,#F472B6)">Criar meu crachá! 🎨</Btn>
+    </div>
+    :<div style={{textAlign:"center"}}>
+      <div style={{display:"inline-block",background:"#fff",borderRadius:20,border:`4px solid ${color}`,padding:"20px 28px",boxShadow:`0 8px 30px ${color}33`,minWidth:200}}>
+        <div style={{width:12,height:12,borderRadius:"50%",background:color,margin:"0 auto 8px"}}/>
+        <div style={{width:40,height:2,background:color,margin:"0 auto 12px"}}/>
+        <div style={{width:64,height:64,borderRadius:"50%",background:color+"22",border:`3px solid ${color}`,margin:"0 auto 12px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:800,color:color}}>{name.charAt(0).toUpperCase()}</div>
+        <div style={{fontSize:20,fontWeight:800,color:"#1a1a2e"}}>{name}</div>
+        {school&&<div style={{fontSize:13,color:"#666",marginTop:4}}>{school}</div>}
+        {turma&&<div style={{display:"inline-block",background:color,color:"#fff",borderRadius:8,padding:"3px 12px",fontSize:12,fontWeight:700,marginTop:6}}>{turma}</div>}
+      </div>
+      <p style={{marginTop:16,fontSize:16,fontWeight:700,color:"#EC4899"}}>Que lindo seu crachá! 🎉</p>
+      <Btn onClick={()=>setPhase("quiz")} gradient="linear-gradient(135deg,#EC4899,#F472B6)">Agora vamos responder sobre crachás! →</Btn>
+    </div>}
+  </div>);
+}
+
+const ACTS=[
+  {id:"placas",title:"Placas por Todo Lado",emoji:"🪧",color:"#8B5CF6",desc:"Aprenda sobre as placas!",total:5},
+  {id:"symbols",title:"Símbolos do Dia a Dia",emoji:"♻️",color:"#E8590C",desc:"O que cada símbolo significa?",total:5},
+  {id:"alphabet",title:"Vogais e Consoantes",emoji:"🔤",color:"#059669",desc:"Classifique as letras!",total:29},
+  {id:"fillwords",title:"Complete as Palavras",emoji:"✏️",color:"#7C3AED",desc:"Preencha as consoantes!",total:8},
+  {id:"swap",title:"Troque as Letras",emoji:"🔀",color:"#F59E0B",desc:"Forme palavras novas!",total:9},
+  {id:"cracha",title:"Meu Crachá",emoji:"🏷️",color:"#EC4899",desc:"Crie seu crachá e aprenda!",total:4},
+];
+
+function App(){
+  const[screen,setScreen]=useState("menu");const[curAct,setCurAct]=useState(null);const[results,setResults]=useState({});const[conf,setConf]=useState(false);
+  const start=(id)=>{setCurAct(id);setScreen("activity");};
+  const finish=(id,sc)=>{setResults(p=>({...p,[id]:sc}));setScreen("result");setConf(true);setTimeout(()=>setConf(false),3000);};
+  const menu=()=>{setScreen("menu");setCurAct(null);};
+  const totalSc=Object.values(results).reduce((a,b)=>a+b,0);const done=Object.keys(results).length;const act=ACTS.find(a=>a.id===curAct);
+
+  if(screen==="result")return(<div style={{maxWidth:440,margin:"0 auto",padding:"40px 16px",textAlign:"center"}}><Confetti show={conf}/>
+    <div style={{fontSize:64,animation:"float 2s ease-in-out infinite",marginBottom:16}}>🏆</div>
+    <h2 style={{fontSize:24,fontWeight:800,color:"#1a1a2e",margin:"0 0 8px"}}>Parabéns!</h2>
+    <p style={{fontSize:16,color:"#666",marginBottom:16}}>Você completou: <strong style={{color:act?.color}}>{act?.title}</strong></p>
+    <div style={{display:"inline-block",background:"#fff",borderRadius:20,padding:"16px 32px",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",marginBottom:20}}>
+      <div style={{fontSize:36,fontWeight:800,color:"#F59E0B"}}>{results[curAct]} pontos</div>
+      <Stars score={results[curAct]} total={act?.total}/>
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <Btn onClick={()=>start(curAct)} gradient={`linear-gradient(135deg,${act?.color},${act?.color}aa)`}>Tentar de novo! 🔄</Btn>
+      <button onClick={menu} style={{background:"#f3f4f6",color:"#555",border:"none",borderRadius:14,padding:"14px 32px",fontSize:16,fontWeight:700,cursor:"pointer"}}>Voltar ao menu 📚</button>
+    </div></div>);
+
+  if(screen==="activity")return(<div style={{maxWidth:440,margin:"0 auto",padding:"16px"}}>
+    <button onClick={menu} style={{background:"none",border:"none",fontSize:14,color:"#888",cursor:"pointer",fontWeight:600,marginBottom:12,padding:"4px 0"}}>← Voltar ao menu</button>
+    <div style={{background:"#fff",borderRadius:24,padding:"24px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
+      <h2 style={{fontSize:20,fontWeight:800,textAlign:"center",margin:"0 0 20px",color:act?.color}}>{act?.emoji} {act?.title}</h2>
+      {curAct==="placas"&&<ActPlacas onFinish={s=>finish("placas",s)}/>}
+      {curAct==="symbols"&&<ActSymbols onFinish={s=>finish("symbols",s)}/>}
+      {curAct==="alphabet"&&<ActAlpha onFinish={s=>finish("alphabet",s)}/>}
+      {curAct==="fillwords"&&<ActFill onFinish={s=>finish("fillwords",s)}/>}
+      {curAct==="swap"&&<ActSwap onFinish={s=>finish("swap",s)}/>}
+      {curAct==="cracha"&&<ActCracha onFinish={s=>finish("cracha",s)}/>}
+    </div></div>);
+
+  return(<div style={{maxWidth:440,margin:"0 auto",padding:"24px 16px"}}>
+    <div style={{textAlign:"center",marginBottom:24}}>
+      <div style={{fontSize:48,animation:"float 3s ease-in-out infinite",marginBottom:8}}>📚</div>
+      <h1 style={{fontSize:26,fontWeight:800,color:"#1a1a2e",margin:0,lineHeight:1.2}}>Hora de Estudar!</h1>
+      <p style={{fontSize:14,color:"#666",margin:"6px 0 0"}}>Escolha uma atividade para começar</p>
+      {done>0&&<div style={{display:"inline-block",background:"linear-gradient(135deg,#F59E0B,#EAB308)",color:"#fff",borderRadius:20,padding:"4px 16px",fontSize:13,fontWeight:700,marginTop:8}}>⭐ {totalSc} pontos • {done}/{ACTS.length} completas</div>}
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      {ACTS.map((a,i)=>{const comp=results[a.id]!==undefined;
+        return(<button key={a.id} onClick={()=>start(a.id)} style={{display:"flex",alignItems:"center",gap:14,background:"#fff",border:`2px solid ${comp?"#10B981":a.color}22`,borderRadius:18,padding:"14px 16px",cursor:"pointer",boxShadow:`0 4px 16px ${a.color}15`,textAlign:"left",animation:`slideUp 0.4s ease-out ${i*0.08}s both`,transition:"transform 0.2s,box-shadow 0.2s"}}>
+          <div style={{width:52,height:52,borderRadius:14,background:`${a.color}15`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,flexShrink:0}}>{a.emoji}</div>
+          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700,color:"#1a1a2e"}}>{a.title}</div><div style={{fontSize:13,color:"#888",marginTop:2}}>{a.desc}</div></div>
+          {comp&&<div style={{background:"#D1FAE5",borderRadius:10,padding:"4px 10px",fontSize:12,fontWeight:700,color:"#059669",flexShrink:0}}>✅ {results[a.id]}pts</div>}
+        </button>);
+      })}
+    </div>
+  </div>);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
